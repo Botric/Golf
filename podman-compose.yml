@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  golf_app:
+    build: .
+    ports:
+      - "8585:8585"
+    environment:
+      APP_PASSWORD: ${APP_PASSWORD:-golfer123}
+      SECRET_KEY:    ${SECRET_KEY:-devkey}
+      SQLALCHEMY_DATABASE_URI: sqlite:////app/data/golf.db
+    volumes:
+      - golf_data:/app/data
+volumes:
+  golf_data: {}

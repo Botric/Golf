@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scorecardd2 – Day {{ day }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- Debug output -->
+  <pre>
+    Holes:
+    {% for h in holes %}
+      {{ h.id }}: hole_number={{ h.hole_number }}, par={{ h.par }}, si={{ h.stroke_index }}
+    {% endfor %}
+    Players:
+    {% for p in players %}
+      {{ p.id }}: name={{ p.name }}, hcp_index={{ p.handicap_index }}, course_hcp={{ p.course_hcp }}
+    {% endfor %}
+  </pre>
+
+  <nav>
+    {% for d in range(1,7) %}
+      <a href="{{ url_for('scorecard') }}?day={{ d }}">Day {{ d }}</a>
+    {% endfor %}
+    <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </nav>
+
+  <h2>Scorecard – Day {{ day }}</h2>
+  <h3>{{ course.name }} – Par {{ holes|map(attribute='par')|sum }} | Rating {{ course.rating }} | Slope {{ course.slope }}</h3>
+
+  <!-- Optional: Add an image if needed -->
+  <!-- <img src="{{ url_for('static', filename='your_image.png') }}" alt="Course Image"> -->
+
+  <form method="post">
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">Player</th>
+          <th rowspan="2">HCP Index</th>
+          <th rowspan="2">Course HCP</th>
+          <th colspan="{{ holes|length }}">Hole Scores</th>
+        </tr>
+        <tr>
+          {% for h in holes %}
+            <th>{{ h.hole_number }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th colspan="3">Par</th>
+          {% for h in holes %}
+            <th>{{ h.par }}</th>
+          {% endfor %}
+        </tr>
+        <tr>
+          <th colspan="3">SI</th>
+          {% for h in holes %}
+            <th>{{ h.stroke_index }}</th>
+          {% endfor %}
+        </tr>
+        {% for p in players %}
+        <tr>
+          <td>{{ p.name }}</td>
+          <td>{{ p.handicap_index }}</td>
+          <td>{{ p.course_hcp }}</td>
+          {% for h in holes %}
+          <td>
+            <input type="number" name="strokes-{{ p.id }}-{{ h.id }}" min="0" value="{{ request.form.get('strokes-'~p.id~'-'~h.id, '') }}">
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit">Save Scores</button>
+  </form>
+</body>
+</html>

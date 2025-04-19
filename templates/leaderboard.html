@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <title>Leaderboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <nav>
+    <a href="{{ url_for('scorecard') }}">Scorecard</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </nav>
+  
+  <h2>Leaderboard</h2>
+  <table>
+    <thead><tr><th>Player</th><th>Points</th><th>Award</th></tr></thead>
+    <tbody>
+      {% for name, pts in leaderboard %}
+      <tr>
+        <td data-label="Player">{{ name }}</td>
+        <td data-label="Points">{{ pts }}</td>
+        <td data-label="Award">
+          <a class="btn" href="{{ url_for('certificate', player_id=loop.index0+1) }}">PDF</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
