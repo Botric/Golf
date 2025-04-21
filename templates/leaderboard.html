@@ -3,25 +3,347 @@
 <head>
   <title>Leaderboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <nav>
-    <a href="{{ url_for('scorecard') }}">Scorecard</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
-  </nav>
-  
-  <h2>Leaderboard</h2>
-  <table>
-    <thead><tr><th>Player</th><th>Points</th><th>Award</th></tr></thead>
-    <tbody>
-      {% for name, pts in leaderboard %}
-      <tr>
-        <td data-label="Player">{{ name }}</td>
-        <td data-label="Points">{{ pts }}</td>
-        <td data-label="Award">
-          <a class="btn" href="{{ url_for('certificate', player_id=loop.index0+1) }}">PDF</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: url("{{ url_for('static', filename='background.png') }}") no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .leaderboard-card {
+      background: rgba(255,255,255,0.92);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.18);
+      padding: 40px 32px 32px 32px;
+      max-width: 1100px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 40px 0;
+    }
+    .leaderboard-card nav {
+      align-self: flex-start;
+      margin-bottom: 18px;
+    }
+    .leaderboard-card h2, .leaderboard-card h3 {
+      color: #333;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .leaderboard-card h3 {
+      font-size: 1.1rem;
+      color: #666;
+      font-weight: 400;
+      margin-bottom: 24px;
+    }
+    .leaderboard-card table {
+      background: #fafafa;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(44,44,44,0.06);
+      width: 100%;
+      max-width: 900px;
+    }
+    .leaderboard-card th, .leaderboard-card td {
+      padding: 10px 8px;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .leaderboard-card th {
+      background: #d4af37;
+      color: #fff;
+      font-weight: 600;
+    }
+    .leaderboard-card button.btn {
+      background: #d4af37;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 8px 18px;
+      transition: background 0.2s;
+    }
+    .leaderboard-card button.btn:hover {
+      background: #bfa133;
+    }
+    @media (max-width: 1200px) {
+      .leaderboard-card {
+        max-width: 98vw;
+        padding: 20px 4vw;
+      }
+      .leaderboard-card table {
+        font-size: 0.95rem;
+      }
+    }
+    @media (max-width: 700px) {
+      .leaderboard-card {
+        padding: 10px 2vw;
+      }
+      .leaderboard-card table, .leaderboard-card thead, .leaderboard-card tbody, .leaderboard-card th, .leaderboard-card td, .leaderboard-card tr {
+        display: block;
+      }
+      .leaderboard-card th, .leaderboard-card td {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+    /* Certificate styles (unchanged) */
+    .certificate-bg {
+      width: 800px;
+      height: 600px;
+      background: #fff;
+      border: 6px solid #d4af37;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(44,44,44,0.15);
+      padding: 40px 60px;
+      position: relative;
+      font-family: Georgia, serif;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .certificate-bg .certificate-img-bg {
+      position: absolute;
+      left: 50%;
+      top: 65%;
+      transform: translate(-50%, -50%);
+      width: 350px;
+      opacity: 0.18;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+    }
+    .certificate-bg > * {
+      position: relative;
+      z-index: 1;
+    }
+    .certificate-title {
+      text-align: center;
+      font-size: 2.8rem;
+      font-weight: bold;
+      color: #444;
+      letter-spacing: 2px;
+      margin-top: 30px;
+    }
+    .certificate-subtitle {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #888;
+      margin-bottom: 30px;
+    }
+    .certificate-awarded {
+      text-align: center;
+      color: #d4af37;
+      font-weight: bold;
+      margin: 30px 0 10px 0;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+    }
+    .certificate-name {
+      text-align: center;
+      font-size: 2.5rem;
+      font-family: 'Dancing Script', cursive, Georgia, serif;
+      color: #444;
+      margin-bottom: 20px;
+    }
+    .certificate-points {
+      text-align: center;
+      color: #888;
+      margin: 20px 0;
+    }
+    .certificate-date {
+      margin-top: 80px;
+      text-align: center;
+      color: #d4af37;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .certificate-date-line {
+      border-top: 1px solid #d4af37;
+      width: 180px;
+      margin: 12px auto 0 auto;
+      font-size: 0.9rem;
+      color: #444;
+      padding-top: 4px;
+    }
+    .certificate-trophy {
+      position: absolute;
+      right: 40px;
+      bottom: 40px;
+      width: 90px;
+      height: auto;
+      z-index: 2;
+      opacity: 0.95;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    function exportCertificate(name, pts, isTeam=false, rank=null) {
+      let certName = name;
+      let pointsText = isTeam
+        ? `For achieving a combined score of ${pts} points.`
+        : `For scoring ${pts} points.`;
+      let trophyImg = '';
+      if (rank === 1) {
+        trophyImg = `<img class="certificate-trophy" src="{{ url_for('static', filename='1st.png') }}" alt="1st">`;
+      } else if (rank === 2) {
+        trophyImg = `<img class="certificate-trophy" src="{{ url_for('static', filename='2nd.png') }}" alt="2nd">`;
+      } else if (rank === 3) {
+        trophyImg = `<img class="certificate-trophy" src="{{ url_for('static', filename='3rd.png') }}" alt="3rd">`;
+      }
+      const year = new Date().getFullYear();
+      const certHtml = `
+        <div class="certificate-bg">
+          <img class="certificate-img-bg" src="{{ url_for('static', filename='golfer-silhouette-1.png') }}" alt="" crossorigin="anonymous">
+          <div class="certificate-title">CERTIFICATE</div>
+          <div class="certificate-subtitle">OF APPRECIATION</div>
+          <div class="certificate-awarded">AWARDED TO</div>
+          <div class="certificate-name">${certName}</div>
+          <div class="certificate-points">${pointsText}</div>
+          <div class="certificate-date">
+            <div class="certificate-date-line">${new Date().toLocaleDateString()}</div>
+            DATE
+          </div>
+          ${trophyImg}
+          <div style="position:absolute;bottom:12px;left:0;width:100%;text-align:center;font-size:0.95rem;color:#bfa133;">
+            &copy; Botric ${year}
+          </div>
+        </div>
+      `;
+      const container = document.getElementById('certificate-container');
+      container.innerHTML = certHtml;
+      container.style.display = 'block';
+      html2canvas(container.firstElementChild, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jspdf.jsPDF({
+          orientation: 'landscape',
+          unit: 'px',
+          format: [canvas.width, canvas.height]
+        });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(`${name.replace(/ /g,'_')}-certificate.pdf`);
+        container.style.display = 'none';
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="leaderboard-card">
+    <nav>
+      <a href="{{ url_for('scorecard') }}">Scorecard</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </nav>
+    <h2>Leaderboard</h2>
+    <table>
+      <thead><tr><th>Player</th><th>Points</th><th>Award</th></tr></thead>
+      <tbody>
+        {% for name, pts in leaderboard|sort(attribute=1, reverse=True) %}
+        <tr id="certificate-preview-{{ loop.index0 }}">
+          <td data-label="Player">{{ name }}</td>
+          <td data-label="Points">{{ pts }}</td>
+          <td data-label="Award">
+            <button class="btn" onclick="exportCertificate('{{ name }}', '{{ pts }}', false, {{ loop.index }})">PDF</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Doubles Teams</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>Player 1</th>
+          <th>Player 2</th>
+          <th>Combined Points</th>
+          <th>Award</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set player_points = dict(leaderboard) %}
+        {% set doubles_teams = [
+          (1, 'Andy P', 'Mark H'),
+          (2, 'Joe B', 'John L'),
+          (3, 'Michael D', 'Steve R'),
+          (4, 'Mark A', 'Ray D')
+        ] %}
+        {% set doubles_with_points = [] %}
+        {% for team_num, p1, p2 in doubles_teams %}
+          {% set pts = (player_points.get(p1, 0) + player_points.get(p2, 0)) %}
+          {% set _ = doubles_with_points.append((team_num, p1, p2, pts)) %}
+        {% endfor %}
+        {% for team_num, p1, p2, pts in doubles_with_points|sort(attribute=3, reverse=True) %}
+        <tr>
+          <td>{{ team_num }}</td>
+          <td>{{ p1 }}</td>
+          <td>{{ p2 }}</td>
+          <td>{{ pts }}</td>
+          <td>
+            <button class="btn" onclick="exportCertificate('Team {{ team_num }}: {{ p1 }} & {{ p2 }}', '{{ pts }}', true, {{ loop.index }})">PDF</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Four-Player Teams</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>Player 1</th>
+          <th>Player 2</th>
+          <th>Player 3</th>
+          <th>Player 4</th>
+          <th>Combined Points</th>
+          <th>Award</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set four_teams = [
+          ('A', 'Andy P', 'Mark H', 'Michael D', 'Ray D'),
+          ('B', 'Mark A', 'Joe B', 'John L', 'Steve R')
+        ] %}
+        {% set four_with_points = [] %}
+        {% for team_name, p1, p2, p3, p4 in four_teams %}
+          {% set pts = (player_points.get(p1, 0) + player_points.get(p2, 0) + player_points.get(p3, 0) + player_points.get(p4, 0)) %}
+          {% set _ = four_with_points.append((team_name, p1, p2, p3, p4, pts)) %}
+        {% endfor %}
+        {% for team_name, p1, p2, p3, p4, pts in four_with_points|sort(attribute=5, reverse=True) %}
+        <tr>
+          <td>{{ team_name }}</td>
+          <td>{{ p1 }}</td>
+          <td>{{ p2 }}</td>
+          <td>{{ p3 }}</td>
+          <td>{{ p4 }}</td>
+          <td>{{ pts }}</td>
+          <td>
+            <button class="btn" onclick="exportCertificate('Team {{ team_name }}: {{ p1 }}, {{ p2 }}, {{ p3 }}, {{ p4 }}', '{{ pts }}', true, {{ loop.index }})">PDF</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div id="certificate-container" style="display:none;"></div>
+    <footer style="margin-top:32px;text-align:center;color:#bfa133;font-size:1rem;">
+      &copy; Botric <span id="copyright-year"></span>
+    </footer>
+  </div>
+  <script>
+    // Set copyright year in footer
+    document.getElementById('copyright-year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
