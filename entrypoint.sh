@@ -31,10 +31,12 @@ hole_data = {
 with app.app_context():
     # Always seed holes for all courses
     courses = [
-        ('Pasha', 67.7, 123),
-        ('Nobilis', 70.7, 125),
-        ('Sultan', 71.6, 138),
-        ('Lykia', 71.7, 126)
+        ('Pasha', 67.7, 123),   # Day 1
+        ('Nobilis', 70.7, 125), # Day 2
+        ('Sultan', 71.6, 138),  # Day 3
+        ('Nobilis', 70.7, 125), # Day 4
+        ('Lykia', 71.7, 126),   # Day 5
+        ('Pasha', 67.7, 123)    # Day 6
     ]
     for name, rating, slope in courses:
         course = Course.query.filter_by(name=name).first()
@@ -48,9 +50,6 @@ with app.app_context():
                 db.session.add(Hole(course_id=course.id, hole_number=hn, par=par, stroke_index=si))
     db.session.commit()
 EOF
-
-# Seed players if empty
-# (Seeding now handled by Alembic migration 0002_seed_players.py)
 
 # Finally, launch the server
 exec gunicorn --bind 0.0.0.0:8585 app:app

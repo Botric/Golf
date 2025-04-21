@@ -14,7 +14,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 
-COURSE_MAP = {1:1, 2:2, 3:3, 4:4, 5:3, 6:1}
+COURSE_MAP = {1:1, 2:2, 3:3, 4:2, 5:4, 6:1}
 
 @app.route('/login', methods=['GET','POST'])
 def login():
