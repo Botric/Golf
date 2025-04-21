@@ -1,0 +1,6 @@
+__pycache__/
+.git
+.github
+*.pyc
+Documentation/
+node_modules/

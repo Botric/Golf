@@ -1,0 +1,60 @@
+name: Build & Publish Docker Image
+
+# (1) Trigger on pushes to your main branch (or change to 'release' if you have a release branch)
+on:
+  push:
+    branches: ['main']
+
+env:
+  # (2) Use GitHub Container Registry…
+  REGISTRY: ghcr.io
+  #     …and point it at your lowercase owner/repo
+  IMAGE_NAME: botric/golf
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    # (3) Allow writing to Packages so GITHUB_TOKEN can push
+    permissions:
+      contents: read
+      packages: write
+      id-token: write      # needed for attestations (optional)
+      attestations: write
+
+    steps:
+      # Checkout your code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # (4) Log in to GHCR with the automatically‑provided token
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # (5) Extract semantic tags (e.g. latest, branch name, commit SHA)
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # (6) Build & push using your Dockerfile at the repo root
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # (7) (Optional) Generate and push an in‑registry attestation
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build-and-push.outputs.digest }}
+          push-to-registry: true
