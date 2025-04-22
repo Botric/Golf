@@ -49,6 +49,16 @@ with app.app_context():
             for hn, par, si in hole_data[name]:
                 db.session.add(Hole(course_id=course.id, hole_number=hn, par=par, stroke_index=si))
     db.session.commit()
+
+        # Seed players if none exist
+    if Player.query.count() == 0:
+        players = [
+            ("Andy P", 10.9), ("Joe B", 13.3), ("Mark A", 9.6), ("Michael D", 11.4),
+            ("Steve R", 19.8), ("John L", 22.0), ("Mark H", 27.0), ("Ray H", 25.8)
+        ]
+        for name, hcp in players:
+            db.session.add(Player(name=name, handicap_index=hcp))
+    db.session.commit()
 EOF
 
 # Finally, launch the server
