@@ -28,7 +28,7 @@ def login():
         if datetime.utcnow() < lockout_until:
             remaining = int((lockout_until - datetime.utcnow()).total_seconds() // 60) + 1
             error = f"Too many failed attempts. Try again in {remaining} minute(s)."
-            return render_template('index.html', error=error)
+            return render_template('login.html', error=error)
         else:
             session.pop('lockout_until', None)
             session.pop('login_attempts', None)
@@ -49,7 +49,7 @@ def login():
                 error = "Too many failed attempts. Try again in 5 minutes."
             else:
                 error = f"Invalid password. {5 - attempts} attempt(s) left."
-    return render_template('index.html', error=error)
+    return render_template('login.html', error=error)
 
 @app.route('/logout')
 def logout():
