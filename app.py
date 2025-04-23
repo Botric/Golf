@@ -5,7 +5,7 @@ from config import Config
 import io
 from reportlab.pdfgen import canvas
 from datetime import datetime, timedelta
-
+from hcp_lookup import COURSE_HCP_LOOKUP
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
@@ -108,28 +108,58 @@ def scorecard():
     holes = Hole.query.filter_by(course_id=course.id).order_by(Hole.hole_number).all()
     players = Player.query.order_by(Player.name).all()
 
-    # Compute each player’s Course HCP
+    # Calculate course par (sum of all hole pars)
+    course_par = sum(h.par for h in holes)
+
+    # Compute each player’s Course HCP using lookup
+    course_name = course.name
     for p in players:
-        p.course_hcp = compute_course_handicap(p.handicap_index, course.slope)
+        p.course_hcp = COURSE_HCP_LOOKUP.get(course_name, {}).get(p.name, 0)
 
     # Build a dict of {(player_id, hole_id): strokes}
     scores = {(s.player_id, s.hole_id): s.strokes for s in Score.query.filter_by(day_number=day).all()}
 
     if request.method == 'POST':
         for p in players:
+            # Allocate strokes per hole based on SI
+            strokes_received = [0] * len(holes)
+            # Full strokes for all holes up to Course HCP // 18
+            full_strokes = p.course_hcp // len(holes)
+            # Extra strokes for the lowest SI holes
+            extra_strokes = p.course_hcp % len(holes)
+            # Get holes sorted by stroke index (1 = hardest)
+            holes_by_si = sorted(holes, key=lambda h: h.stroke_index)
+            for i, h in enumerate(holes_by_si):
+                strokes_received[h.hole_number - 1] = full_strokes + (1 if i < extra_strokes else 0)
+
             for h in holes:
                 key = f"strokes-{p.id}-{h.id}"
                 val = request.form.get(key)
                 if val is not None and val != '':
                     strokes = int(val)
                     existing_score = Score.query.filter_by(player_id=p.id, hole_id=h.id, day_number=day).first()
+                    # Strokes received for this hole
+                    sr = strokes_received[h.hole_number - 1]
+                    net_strokes = strokes - sr
+                    # Stableford points calculation
+                    diff = net_strokes - h.par
+                    if diff <= -3:
+                        points = 5
+                    elif diff == -2:
+                        points = 4
+                    elif diff == -1:
+                        points = 3
+                    elif diff == 0:
+                        points = 2
+                    elif diff == 1:
+                        points = 1
+                    else:
+                        points = 0
+
                     if strokes == 0:
                         if existing_score:
                             db.session.delete(existing_score)
                     else:
-                        # Calculate Stableford points
-                        net_strokes = strokes - p.course_hcp // len(holes)  # crude per-hole allocation
-                        points = max(0, 2 + (h.par - net_strokes))
                         if existing_score:
                             existing_score.strokes = strokes
                             existing_score.points = points
