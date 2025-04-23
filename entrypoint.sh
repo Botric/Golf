@@ -51,5 +51,31 @@ with app.app_context():
     db.session.commit()
 EOF
 
+# Seed players
+python << 'EOF'
+from app import app
+from models import db, Player
+
+player_handicaps = {
+    'Andy P': 10.9,
+    'Joe B': 13.3,
+    'Mark A': 9.9,
+    'Michael D': 11.4,
+    'Steve R': 19.8,
+    'John L': 22.0,
+    'Mark H': 27.0,
+    'Ray H': 25.8,
+}
+
+with app.app_context():
+    for name, hcp in player_handicaps.items():
+        player = Player.query.filter_by(name=name).first()
+        if player:
+            player.handicap_index = hcp
+        else:
+            db.session.add(Player(name=name, handicap_index=hcp))
+    db.session.commit()
+EOF
+
 # Finally, launch the server
 exec gunicorn --bind 0.0.0.0:8585 app:app
