@@ -32,7 +32,7 @@ A Flask-based web application for managing golf trip scoring, including individu
 | Steve R     | 19.8          |
 | John L      | 22.0          |
 | Mark H      | 27.0          |
-| Ray H       | 25.8          |
+| Ray H       | 25.1          |
 
 ### Doubles Teams
 
