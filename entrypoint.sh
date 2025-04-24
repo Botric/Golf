@@ -57,7 +57,7 @@ from app import app
 from models import db, Player
 
 player_handicaps = {
-    'Andy P': 10.9,
+    'Andy P': 10.4,
     'Joe B': 13.3,
     'Mark A': 9.9,
     'Michael D': 11.4,
