@@ -25,9 +25,9 @@ A Flask-based web application for managing golf trip scoring, including individu
 
 | Player Name | Handicap Index |
 |-------------|---------------|
-| Andy P      | 10.9          |
+| Andy P      | 10.4          |
 | Joe B       | 13.3          |
-| Mark A      | 9.6           |
+| Mark A      | 9.9           |
 | Michael D   | 11.4          |
 | Steve R     | 19.8          |
 | John L      | 22.0          |
