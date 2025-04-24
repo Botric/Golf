@@ -241,8 +241,12 @@
 <body>
   <div class="leaderboard-card">
     <nav>
-      <a href="{{ url_for('scorecard') }}">Scorecard</a>
-      <a href="{{ url_for('logout') }}">Logout</a>
+      <form action="{{ url_for('scorecard') }}" method="get" style="display:inline;">
+        <button type="submit" class="btn-nav">Scorecard</button>
+      </form>
+      <form action="{{ url_for('logout') }}" method="get" style="display:inline;">
+        <button type="submit" class="btn-nav">Logout</button>
+      </form>
     </nav>
     <h2>Leaderboard</h2>
     <table>

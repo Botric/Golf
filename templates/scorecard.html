@@ -182,10 +182,14 @@
   <div class="scorecard-card">
     <div class="scorecard-nav-bar">
       <div class="nav-left">
-        <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+        <form action="{{ url_for('leaderboard') }}" method="get" style="display:inline;">
+          <button type="submit" class="btn-nav">Leaderboard</button>
+        </form>
       </div>
       <div class="nav-right">
-        <a href="{{ url_for('logout') }}">Logout</a>
+        <form action="{{ url_for('logout') }}" method="get" style="display:inline;">
+          <button type="submit" class="btn-nav">Logout</button>
+        </form>
       </div>
     </div>
     <div class="scorecard-days-row">
