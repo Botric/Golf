@@ -64,7 +64,7 @@ player_handicaps = {
     'Steve R': 19.8,
     'John L': 22.0,
     'Mark H': 27.0,
-    'Ray H': 25.8,
+    'Ray H': 25.1,
 }
 
 with app.app_context():
